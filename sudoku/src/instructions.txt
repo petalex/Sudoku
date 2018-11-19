@@ -1,0 +1,94 @@
+The Classic Sudoku is a number placing puzzle
+based on a 9x9 grid with several given numbers.
+The object is to place the numbers 1 to 9 in
+the empty squares so that each row, 
+each column and each 3x3 box contains t
+he same number only once.
+
+MAIN MENU:
+
+-New game - menu for creating new Sudoku game
+-Load game - menu for loading Sudoku game 
+-Instructions - help menu
+-Quit - exit
+
+NEW GAME:
+
+You can choose between 4 difficulties:
+-Easy (35-41 known fields)
+-Medium (29-34 known fields)
+-Hard (25-28 known fields)
+-Extreme (21-24 known fields)
+-Custom (custom game generating)
+
+After choosing difficulty, game starts.
+
+CUSTOM:
+Menu for custom game input.
+
+C 	       -    checking if sudoku is 
+		    correct at the moment
+	      (green - correct, red - incorrect)
+
+F              -        finish generating
+	         (checks if Sudoku is correct)
+
+
+Main table of Sudoku puzzle is containing
+9X9 matix of field.
+
+Controls:
+
+UP, DOWN,      -    controling movement
+RIGHT, LEFT          of cursor in matix
+
+S              -   saving current progress
+
+H              -           hint 
+		(checks one field in puzzle)
+	      (green - correct, red - incorrect)
+
+U              -           hint 
+		(solves one field in puzzle)
+
+
+C 	       -    checking if sudoku is 
+		    correct at the moment
+	      (green - correct, red - incorrect)
+
+F              -        finish game
+	    (checks if Sudoku is correct and full)
+
+P              -           pause
+	      (game continiues after any input)
+
+Q[ESC]         -           quit 
+
+
+SAVING GAME
+
+Enter the name of your game in menu.
+(max 10 characters, letters and numbers only
+          without spaces)
+
+LEFT, RIGHT    - moving cursor
+
+ENTER          - confirming and saving game
+
+ESC            - returning to current game
+
+After saving, current game continiues.
+
+LOAD GAME
+
+Menu with all saved games.
+After choosing one of the listed games, 
+svg file is going to open asking you
+if this is the game you want.
+After check, game starts.
+
+QUIT
+
+Simple menu for exiting the game.
+
+WE HOPE YOU'LL ENJOY PLAYING OUR GAME!!!
