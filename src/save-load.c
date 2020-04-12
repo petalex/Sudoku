@@ -1,4 +1,4 @@
-#include "save-load.h"
+#include "../include/save-load.h"
 
 char *load_game() {
 	char **menu, *game, ime[15], svg[15], *point;
@@ -10,7 +10,7 @@ char *load_game() {
 
 		clear();
 
-		sudoku_logo();
+		add_logo();
 
 		keypad(stdscr, TRUE);
 		getyx(stdscr, y, x);
@@ -43,7 +43,7 @@ char *load_game() {
 
 		clear();
 
-		sudoku_logo();
+		add_logo();
 
 		// Menu
 		keypad(stdscr, TRUE);
@@ -75,13 +75,13 @@ char *load_game() {
 			key = getch();
 			switch (key) {
 
-			case DOWN:
+			case TUI_KEY_DOWN:
 				pointer++;
 				if (pointer == maxmenu)
 					pointer = 0;
 				break;
 
-			case UP:
+			case TUI_KEY_UP:
 				pointer--;
 				if (pointer < 0)
 					pointer = maxmenu - 1;
@@ -117,7 +117,7 @@ char *load_game() {
 
 			clear();
 
-			sudoku_logo();
+			add_logo();
 
 			// Creating window
 			wcheck = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -272,7 +272,7 @@ char *enter_name() {
 
 	clear();
 
-	sudoku_logo();
+	add_logo();
 
 	// Creating window
 	win = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -378,7 +378,7 @@ int save_scr() {
 
 	clear();
 
-	sudoku_logo();
+	add_logo();
 
 	// Creating window
 	wsave = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);

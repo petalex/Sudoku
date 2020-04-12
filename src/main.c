@@ -1,53 +1,45 @@
-#include "graphics.h"
-#include "functions.h"
+#include "../include/tui.h"
 
 void main() {
-	int menu;
-	int exit = 0;
+	int menu_choice;
+	int exit_choice = EXIT_NO;
 
-	srand(time(0));
-
-	initscr();
-	resize_term(75, 100);
-	curs_set(0);
-	noecho();
-
-	start_scr();
-	menu = start_menu();
-	while (1) { 
-		switch (menu) {
-		case 0:
-			menu = start_menu();
-			break;
-
-		case 1: 
-			menu = 0;
-			game(NULL);
-			break;
-
-		case 2: {
-			char *isLoad;
-
-			menu = 0;
-			if ((isLoad = load_game()) == NULL) 
+	initialize();
+	start_screen();
+	menu_choice = main_menu_screen();
+	while (TRUE) {
+		switch (menu_choice) {
+			case MENU_BACK_TO_MAIN: {
+				menu_choice = main_menu_screen();
 				break;
-			game(isLoad);
+			}
+			case MENU_NEW_GAME: {
+				game(NULL);
+				menu_choice = MENU_BACK_TO_MAIN;
+				break;
+			}
+			case MENU_LOAD_GAME: {
+				char *loaded_game;
+				if ((loaded_game = load_game()) != NULL) {
+					game(loaded_game);
+				}
+				menu_choice = MENU_BACK_TO_MAIN;
+				break;
+			}
+			case MENU_INSTRUCTIONS: {
+				instructions();
+				menu_choice = MENU_BACK_TO_MAIN;
+				break;
+			}
+			case MENU_EXIT: {
+				exit_choice = exit_menu();
+				menu_choice = MENU_BACK_TO_MAIN;
+				break;
+			}
 		}
+		if (exit_choice == EXIT_YES) {
 			break;
-
-		case 3:
-			menu = 0;
-			instructions();
-			break;
-
-		case 4: 
-			menu = 0;
-			exit = exit_menu();
 		}
-		if (exit == 2)
-			break;
 	}
-
-	refresh();
-	endwin();
+	finish();
 }

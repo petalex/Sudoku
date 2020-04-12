@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "../include/engine.h"
 
 void buildSudoku(int sud[][9]) {
 

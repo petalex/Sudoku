@@ -1,7 +1,9 @@
-#pragma once
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
 
 #include <stdlib.h>
-#include "graphics.h"
+#include <stdio.h>
+#include "tui.h"
 
 #define F (0)
 #define T (!F)
@@ -64,3 +66,5 @@ int smartBruteForce(int sud[][9]);
 int countSolutions(int sud[][9]);
 int hasOneSolution(int sud[][9]);
 void oneSolution(int sud[][9], int* numOfSolutions);
+
+#endif

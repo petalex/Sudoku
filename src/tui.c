@@ -1,7 +1,213 @@
-#include "graphics.h"
+#include "../include/tui.h"
 
 clock_t last_time, first_time;
 char loading1[] = "LOADING .....";
+
+void initialize() {
+	initscr();
+	resize_term(75, 100);
+	curs_set(0);
+	noecho();
+	srand(time(0));
+}
+
+void start_screen() {
+	char *logo[] = {
+		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
+		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
+		"|  |         |  |     |  |  |  |   |_   |  |  |    |  |  |  |   _|  |  |  |     |  |",
+		"|  |______   |  |     |  |  |  |     |  |  |  |    |  |  |  |__|   _|  |  |     |  |",
+		"|_______  |  |  |     |  |  |  |     |  |  |  |    |  |  |   __   |_   |  |     |  |",
+		"       |  |  |  |     |  |  |  |    _|  |  |  |    |  |  |  |  |_   |  |  |     |  |",
+		"_______|  |  |  |_____|  |  |  |___|   _|  |  |____|  |  |  |    |  |  |  |_____|  |",
+		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|"
+	};
+	int logo_rows = 8, logo_start_row, logo_start_col;
+	char tap[] = "TAP ANYTHING TO CONTINUE";
+	int tap_start_row, tap_start_col, is_tap_shown;
+	char copyright[] = "Copyright by: AMP team";
+	int copyright_start_row, copyright_start_col;
+	int row;
+
+	// Initial sleep
+	napms(500);
+
+	// Add flashing Sudoku logo (starting 20% from top and horizontally centered)
+	logo_start_row = 0.2 * LINES;
+	logo_start_col = (COLS - 1 - SUDO_WIDTH) / 2;
+	for (row = 0; row < logo_rows; row++) {
+		flash();
+		mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
+		refresh();
+		napms(100);
+	}
+
+	attrset(A_BOLD);
+
+	// Save tap message's start position (30 rows under the logo and horizontally centered)
+	tap_start_row = getcury(stdscr) + 30;
+	tap_start_col = (COLS - 1 - strlen(tap)) / 2;
+
+	// Add copyright message (70 rows from top and horizontally centered)
+	copyright_start_row = 70;
+	copyright_start_col = (COLS - 1 - strlen(copyright)) / 2;
+	mvaddstr(copyright_start_row, copyright_start_col, copyright);
+
+	napms(1000);
+
+	// Enable arrow keys input and make getch non-blocking
+	keypad(stdscr, TRUE);
+	nodelay(stdscr, TRUE);
+
+	// "Blink" tap message while waiting for user's input
+	is_tap_shown = TRUE;
+	while (getch() == ERR) {
+		switch (is_tap_shown) {
+			case TRUE:
+				// Add tap message
+				mvaddstr(tap_start_row, tap_start_col, tap); 
+				break;
+			case FALSE:
+				// Remove tap message
+				move(tap_start_row, tap_start_col);
+				deleteln();
+				insertln();
+				break;
+		}
+		is_tap_shown = 1 - is_tap_shown;
+		refresh();
+		napms(500);
+	}
+
+	// Reset and refresh
+	attroff(A_BOLD);
+	keypad(stdscr, FALSE);
+	nodelay(stdscr, FALSE);
+	clear();
+	refresh();
+}
+
+int main_menu_screen() {
+	char *menu_options[] = {
+		"NEW GAME",
+		"LOAD GAME",
+		"INSTRUCTIONS",
+		"QUIT"
+	};
+	int menu_options_count = 4, menu_options_start_row, menu_option_row, menu_option_col, menu_option_height = 3;
+	int current_option = 0, is_option_shown;
+	char key = ' ';
+	int index, x, y;
+
+	clear();
+	
+	// Add Sudoko logo at the top
+	add_logo();
+
+	// Enable arrow keys input
+	keypad(stdscr, TRUE);
+
+	// Save menu start row (15 rows under the logo)
+	menu_options_start_row = getcury(stdscr) + 15;
+
+	// Add menu options and react on user's input
+	while ((key != '\n') && (key != ESC)) {
+		int is_option_shown = TRUE;
+
+		// Make getch non-blocking
+		nodelay(stdscr, TRUE);
+		// Add menu options where current option is "blinking"
+		while ((key = getch()) == ERR) {
+			// Save menu option start column (horizontally centered)
+			for (index = 0; index < menu_options_count; index++) {
+				menu_option_row = menu_options_start_row + index * menu_option_height;
+				menu_option_col = (COLS - 1 - strlen(menu_options[index])) / 2;
+				if (index == current_option && is_option_shown) {
+					// Add current menu option as inversed
+					attron(A_REVERSE);
+					mvaddstr(menu_option_row, menu_option_col, menu_options[index]);
+					attroff(A_REVERSE);
+				}
+				else {
+					// Add menu option
+					mvaddstr(menu_option_row, menu_option_col, menu_options[index]);
+				}
+			}
+			is_option_shown = 1 - is_option_shown;
+			refresh();
+			napms(300);
+		}
+		// Reset getch to blocking
+		nodelay(stdscr, FALSE);
+
+		// React on user's input
+		switch (key) {
+			case TUI_KEY_DOWN:
+				// "Choose" next menu option
+				current_option++;
+				if (current_option == menu_options_count) {
+					current_option = 0; // Back to first option
+				}
+				break;
+			case TUI_KEY_UP:
+				// "Choose" previous menu option
+				current_option--;
+				if (current_option < 0) {
+					current_option = menu_options_count - 1; // Back to last option
+				}
+				break;
+			default:
+				// Do nothing
+				break;
+		}
+	}
+
+	// Reset and refresh
+	keypad(stdscr, FALSE);
+	clear();
+	refresh();
+
+	// Return chosen menu option
+	if (key == ESC) {
+		return MENU_EXIT;
+	} else {
+		return current_option + 1;
+	}
+}
+
+void add_logo() {
+	char *logo[] = {
+		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
+		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
+		"|  |         |  |     |  |  |  |   |_   |  |  |    |  |  |  |   _|  |  |  |     |  |",
+		"|  |______   |  |     |  |  |  |     |  |  |  |    |  |  |  |__|   _|  |  |     |  |",
+		"|_______  |  |  |     |  |  |  |     |  |  |  |    |  |  |   __   |_   |  |     |  |",
+		"       |  |  |  |     |  |  |  |    _|  |  |  |    |  |  |  |  |_   |  |  |     |  |",
+		"_______|  |  |  |_____|  |  |  |___|   _|  |  |____|  |  |  |    |  |  |  |_____|  |",
+		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|"
+	};
+	int logo_rows = 8, logo_start_row, logo_start_col;
+	int row;
+
+	attrset(A_BOLD);
+
+	// Add Sudoku logo (starting 10% from top and horizontally centered)
+	logo_start_row = 0.1 * LINES;
+	logo_start_col = (COLS - 1 - SUDO_WIDTH) / 2;
+	for (row = 0; row < logo_rows; row++) {
+		mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
+	}
+
+	attroff(A_BOLD);
+	refresh();
+}
+
+void finish() {
+	refresh();
+	endwin();
+}
+
+
 
 // Main screen
 void game(char *file_name) {
@@ -45,7 +251,7 @@ void game(char *file_name) {
 	init_pair(4, COLOR_WHITE, COLOR_MAGENTA);
 
 	if (file == NULL) {
-		sudoku_logo();
+		add_logo();
 
 		getyx(stdscr, y, x);
 		while ((key != '\n') && (key != ESC)) {
@@ -66,13 +272,13 @@ void game(char *file_name) {
 			key = getch();
 			switch (key) {
 
-			case DOWN:
+			case TUI_KEY_DOWN:
 				nivo++;
 				if (nivo == maxmenu)
 					nivo = 1;
 				break;
 
-			case UP:
+			case TUI_KEY_UP:
 				nivo--;
 				if (nivo < 1)
 					nivo = maxmenu - 1;
@@ -110,7 +316,7 @@ void game(char *file_name) {
 			level = rand() % 4 + 21;
 
 			clear();
-			sudoku_logo();
+			add_logo();
 			mvaddstr(0.2*LINES + 20, (COLS - 1 - strlen("!!! CAUTION !!!")) / 2, "!!! CAUTION !!!");
 			mvaddstr(0.2*LINES + 21, (COLS - 1 - strlen("THIS MIGHT TAKE LONG")) / 2, "THIS MIGHT TAKE LONG");
 			refresh();
@@ -137,7 +343,7 @@ void game(char *file_name) {
 					input = -1;
 				}
 
-				sudoku_logo();
+				add_logo();
 				// Options line
 				mvprintw(58, (COLS - 1 - strlen(".: CUSTOM LEVEL GENERATOR :.")) / 2, ".: CUSTOM LEVEL GENERATOR :.");
 				mvprintw(60, (COLS - 1 - strlen(custom)) / 2, custom);
@@ -197,13 +403,13 @@ void game(char *file_name) {
 						input = 0;
 						break;
 
-					case DOWN:
+					case TUI_KEY_DOWN:
 						pointerx++;
 						if (pointerx == 9)
 							pointerx = 0;
 						break;
 
-					case UP:
+					case TUI_KEY_UP:
 						pointerx--;
 						if (pointerx < 0)
 							pointerx = 8;
@@ -353,7 +559,7 @@ void game(char *file_name) {
 			input = -1;
 		}
 
-		sudoku_logo();
+		add_logo();
 
 		// Current time
 		game_end = time + clock();
@@ -422,13 +628,13 @@ void game(char *file_name) {
 				input = 0;
 				break;
 
-			case DOWN:
+			case TUI_KEY_DOWN:
 				pointerx++;
 				if (pointerx == 9)
 					pointerx = 0;
 				break;
 
-			case UP:
+			case TUI_KEY_UP:
 				pointerx--;
 				if (pointerx < 0)
 					pointerx = 8;
@@ -497,7 +703,7 @@ void game(char *file_name) {
 
 				//------------------- Save confirmation--------------------
 
-				sudoku_logo();
+				add_logo();
 
 				// Current time
 				pause_time = 0;
@@ -686,7 +892,7 @@ void game(char *file_name) {
 				clear();
 				nodelay(stdscr, TRUE);
 
-				sudoku_logo();
+				add_logo();
 
 				y = getcury(stdscr) + 20;
 				while (getch() == ERR) {
@@ -775,156 +981,7 @@ void game(char *file_name) {
 	keypad(stdscr, FALSE);
 }
 
-// Start screen
-void start_scr(){
-	char *sudoku[] = {
-		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
-		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
-		"|  |         |  |     |  |  |  |   |_   |  |  |    |  |  |  |   _|  |  |  |     |  |",
-		"|  |______   |  |     |  |  |  |     |  |  |  |    |  |  |  |__|   _|  |  |     |  |",
-		"|_______  |  |  |     |  |  |  |     |  |  |  |    |  |  |   __   |_   |  |     |  |",
-		"       |  |  |  |     |  |  |  |    _|  |  |  |    |  |  |  |  |_   |  |  |     |  |",
-		"_______|  |  |  |_____|  |  |  |___|   _|  |  |____|  |  |  |    |  |  |  |_____|  |",
-		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|",
-		"                               Copyright by: AMP team                               "};
-	char tap[] = "HIT ANYTHING TO CONTINUE";
-	int width_tap = strlen(tap), i, ind = 0, y;
-
-	napms(500);
-	attrset(A_BOLD);
-
-	for (i = 0; i < 8; i++){
-		flash();
-		mvaddstr(0.2*LINES + i, (COLS - 1 - SUDO_WIDTH) / 2, sudoku[i]); // COLS-1, starting from 0!
-		refresh();
-		napms(100);
-	}
-
-	y = getcury(stdscr) + 30; // + number of lines under logo
-
-	mvaddstr(70, (COLS - 1 - SUDO_WIDTH) / 2, sudoku[8]);
-
-	napms(1000);
-
-	// Blink
-	keypad(stdscr, TRUE);
-	nodelay(stdscr, TRUE);
-
-	while (getch() == ERR){
-		switch (ind){
-
-		case 0: 
-			mvaddstr(y, (COLS - 1 - width_tap) / 2, tap); 
-			ind++;
-			break;
-
-		case 1:
-			move(y, (COLS - 1 - width_tap) / 2);
-			deleteln();
-			insertln();
-			ind = 0;
-
-		}
-		refresh();
-		napms(500);
-	}
-
-	clear();
-	keypad(stdscr, FALSE);
-	nodelay(stdscr, FALSE);
-	refresh();
-}
-
-// Sudoku logo, used in all screens.
-void sudoku_logo(){
-	char *sudo[] = {
-		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
-		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
-		"|  |         |  |     |  |  |  |   |_   |  |  |    |  |  |  |   _|  |  |  |     |  |",
-		"|  |______   |  |     |  |  |  |     |  |  |  |    |  |  |  |__|   _|  |  |     |  |",
-		"|_______  |  |  |     |  |  |  |     |  |  |  |    |  |  |   __   |_   |  |     |  |",
-		"       |  |  |  |     |  |  |  |    _|  |  |  |    |  |  |  |  |_   |  |  |     |  |",
-		"_______|  |  |  |_____|  |  |  |___|   _|  |  |____|  |  |  |    |  |  |  |_____|  |",
-		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|"};
-	int i;
-
-	// Write Sudoku logo
-	attrset(A_BOLD);
-	for (i = 0; i < 8; i++)
-		mvaddstr(0.1*LINES + i, (COLS - 1 - SUDO_WIDTH) / 2, sudo[i]); // COLS-1, starting from 0!
-	attroff(A_BOLD);
-	refresh();
-}
-
 //-----------------------------------------------------------
-int start_menu(){
-	char *menu[] = {
-		"NEW GAME",
-		"LOAD GAME",
-		"INSTRUCTIONS",
-		"QUIT"};
-	char key = ' ';
-	int i, maxmenu = 4, pointer = 0, x, y;	
-
-	clear();
-	
-	sudoku_logo();
-
-	// Menu
-	keypad(stdscr, TRUE);
-	getyx(stdscr, y, x);
-	while ((key != '\n') && (key != ESC)){
-		int ind = T;
-
-		nodelay(stdscr, TRUE);
-
-		while ((key = getch()) == ERR) {
-			for (i = 0; i < maxmenu; i++)
-				if (i == pointer) {
-					if (ind) {
-						ind = F;
-						attron(A_REVERSE);
-					}
-					else
-						ind = T;
-					mvaddstr(y + 15 + i * 3, (COLS - 1 - strlen(menu[i])) / 2, menu[i]);
-					attroff(A_REVERSE);
-				}
-				else {
-					mvaddstr(y + 15 + i * 3, (COLS - 1 - strlen(menu[i])) / 2, menu[i]);
-				}
-				refresh();
-				napms(300);
-		}
-		nodelay(stdscr, FALSE);
-
-		switch (key){
-
-		case DOWN:
-			pointer++;
-			if (pointer == maxmenu)
-				pointer = 0;
-			break;
-
-		case UP:
-			pointer--;
-			if (pointer < 0)
-				pointer = maxmenu - 1;
-			break;
-
-		default:
-			break;
-		}
-	}
-
-	keypad(stdscr, FALSE);
-	clear();
-	refresh();
-
-	if (key == ESC)
-		return maxmenu;
-	return pointer + 1; 
-}
 
 int exit_menu() {
 	char *exit[] = {
@@ -937,7 +994,7 @@ int exit_menu() {
 
 	clear();
 
-	sudoku_logo();
+	add_logo();
 
 	// Creating window
 	wexit = newwin(25, SUDO_WIDTH -10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -1022,7 +1079,7 @@ void instructions() {
 	keypad(stdscr, TRUE);
 	while (key != ESC) {
 		clear();
-		sudoku_logo();
+		add_logo();
 
 		mvprintw(0.1*LINES + 15, (COLS - 1 - strlen("INSTRUCTIONS")) / 2, "INSTRUCTIONS");
 		mvprintw(0.1*LINES + 55, (COLS - 1 - strlen("(press ESC to return)")) / 2, "(press ESC to return)");
@@ -1034,13 +1091,13 @@ void instructions() {
 
 		switch (key) {
 
-		case DOWN:
+		case TUI_KEY_DOWN:
 			pointer += 5;
 			if (pointer > br - height)
 				pointer = br - height;
 			break;
 
-		case UP:
+		case TUI_KEY_UP:
 			pointer -= 5;
 			if (pointer < 0)
 				pointer = 0;
@@ -1059,7 +1116,7 @@ void finish_scr(float time) {
 
 	clear();
 
-	sudoku_logo();
+	add_logo();
 
 	// Creating window
 	wfinish = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
