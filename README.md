@@ -29,9 +29,10 @@ sudo dnf install ncurses-devel
 ```
 <br />
 
-After successful pacakge instalation, only thing left to do is to compile project using `Make`:
+After successful pacakge instalation, only thing left to do is to build the project using `Make` and run the game:
 ```bash
-$ make
+$ make build
+$ ./bin/linux/sudoku
 ```
 
 >*`Make` package must be installed before project compilation, but is usually pre-installed with distribution.*

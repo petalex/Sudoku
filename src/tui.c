@@ -11,7 +11,7 @@ void initialize() {
 	srand(time(0));
 }
 
-void start_screen() {
+void add_logo(int on_start_screen) {
 	char *logo[] = {
 		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
 		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
@@ -23,6 +23,37 @@ void start_screen() {
 		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|"
 	};
 	int logo_rows = 8, logo_start_row, logo_start_col;
+	int row;
+
+	attrset(A_BOLD);
+
+	// Add Sudoku logo (starting 20/10% from top and horizontally centered)
+	if (on_start_screen) {
+		// Starting 20% from top on start screen
+		logo_start_row = 0.2 * LINES;
+	} else {
+		// Starting 10% from top on other screens
+		logo_start_row = 0.1 * LINES;
+	}
+	logo_start_col = (COLS - 1 - LOGO_WIDTH) / 2;
+	for (row = 0; row < LOGO_HEIGHT; row++) {
+		if (on_start_screen) {
+			// Flash each part of the logo on start screen
+			flash();
+			mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
+			refresh();
+			napms(100);
+		} else {
+			// Just add part of the logo on other screens
+			mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
+		}
+	}
+
+	attroff(A_BOLD);
+	refresh();
+}
+
+void start_screen() {
 	char tap[] = "TAP ANYTHING TO CONTINUE";
 	int tap_start_row, tap_start_col, is_tap_shown;
 	char copyright[] = "Copyright by: AMP team";
@@ -32,15 +63,8 @@ void start_screen() {
 	// Initial sleep
 	napms(500);
 
-	// Add flashing Sudoku logo (starting 20% from top and horizontally centered)
-	logo_start_row = 0.2 * LINES;
-	logo_start_col = (COLS - 1 - SUDO_WIDTH) / 2;
-	for (row = 0; row < logo_rows; row++) {
-		flash();
-		mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
-		refresh();
-		napms(100);
-	}
+	// Add flashing Sudoku logo
+	add_logo(TRUE);
 
 	attrset(A_BOLD);
 
@@ -97,12 +121,12 @@ int main_menu_screen() {
 	int menu_options_count = 4, menu_options_start_row, menu_option_row, menu_option_col, menu_option_height = 3;
 	int current_option = 0, is_option_shown;
 	char key = ' ';
-	int index, x, y;
+	int index;
 
 	clear();
 	
 	// Add Sudoko logo at the top
-	add_logo();
+	add_logo(FALSE);
 
 	// Enable arrow keys input
 	keypad(stdscr, TRUE);
@@ -175,30 +199,92 @@ int main_menu_screen() {
 	}
 }
 
-void add_logo() {
-	char *logo[] = {
-		"___________  ____     ____  __________     ____________  ____    ____  ____     ____",
-		"|  _______|  |  |     |  |  |  ____   |_   |   ____   |  |  |    |  |  |  |     |  |",
-		"|  |         |  |     |  |  |  |   |_   |  |  |    |  |  |  |   _|  |  |  |     |  |",
-		"|  |______   |  |     |  |  |  |     |  |  |  |    |  |  |  |__|   _|  |  |     |  |",
-		"|_______  |  |  |     |  |  |  |     |  |  |  |    |  |  |   __   |_   |  |     |  |",
-		"       |  |  |  |     |  |  |  |    _|  |  |  |    |  |  |  |  |_   |  |  |     |  |",
-		"_______|  |  |  |_____|  |  |  |___|   _|  |  |____|  |  |  |    |  |  |  |_____|  |",
-		"|_________|  |___________|  |_________|    |__________|  |__|    |__|  |___________|"
-	};
-	int logo_rows = 8, logo_start_row, logo_start_col;
-	int row;
+void instructions_screen() {
+	char title[] = "INSTRUCTIONS";
+	int title_start_row, title_start_col;
+	char hint[] = "(press ESC to return)";
+	int hint_start_row, hint_start_col;
+	FILE *instructions_file;
+	WINDOW *instructions_pad;
+	int instructions_pad_start_row, instructions_pad_start_col, instructions_pad_end_row, instructions_pad_end_col;
+	char instruction_row[50], key = ' ';
+	int row = 0, instructions_count, pointer_row = 0, pointer_col = 0;
+	
+	// Open Instructions file for reading
+	if ((instructions_file = fopen(INSTRUCTIONS_FILE, "r")) == NULL) return;
 
-	attrset(A_BOLD);
+	// Count number of lines in the file
+	for (instructions_count = 0; fgets(instruction_row, INSTRUCTIONS_PAD_WIDTH, instructions_file) != NULL; instructions_count++);
+	rewind(instructions_file);
+	instructions_count *= 2; // Add space row after each instruction row
 
-	// Add Sudoku logo (starting 10% from top and horizontally centered)
-	logo_start_row = 0.1 * LINES;
-	logo_start_col = (COLS - 1 - SUDO_WIDTH) / 2;
-	for (row = 0; row < logo_rows; row++) {
-		mvaddstr(logo_start_row + row, logo_start_col, logo[row]);
+	// Create scrollable pad and add all space-separated instructions
+	instructions_pad = newpad(instructions_count, INSTRUCTIONS_PAD_WIDTH);
+	while (!feof(instructions_file)) {
+		fgets(instruction_row, INSTRUCTIONS_PAD_WIDTH, instructions_file);
+		mvwaddstr(instructions_pad, row++, 0, instruction_row);
+		mvwaddstr(instructions_pad, row++, 0, "\n");
+	}
+	fclose(instructions_file);
+
+	// Title's position (7 columns under the logo and horizontally centered)
+	title_start_row = (0.1 * LINES + LOGO_HEIGHT) + 7;
+	title_start_col = (COLS - 1 - strlen(title)) / 2;
+
+	// Pad's start(top-left) and end(bottom-right) positions
+	instructions_pad_start_row = (0.1 * LINES + LOGO_HEIGHT) + 12;
+	instructions_pad_start_col = (COLS - 1 - INSTRUCTIONS_PAD_WIDTH) / 2;
+	instructions_pad_end_row = instructions_pad_start_row + INSTRUCTIONS_PAD_HEIGTH;
+	instructions_pad_end_col = (COLS - 1 - INSTRUCTIONS_PAD_WIDTH) / 2 + INSTRUCTIONS_PAD_WIDTH;
+
+	// Hint's position (5 columns under the pad and horizontally centered)
+	hint_start_row = instructions_pad_end_row + 5;
+	hint_start_col = (COLS - 1 - strlen(hint)) / 2;
+
+	// Enable arrow keys input
+	keypad(stdscr, TRUE);
+
+	// Add instructions pad and react on user's input
+	while (key != ESC) {
+		// Clear and re-add all components on instructions screen
+		clear();
+		add_logo(FALSE);
+		mvaddstr(title_start_row, title_start_col, title);
+		mvaddstr(hint_start_row, hint_start_col, hint);
+		refresh();
+		prefresh(
+			instructions_pad, 
+			pointer_row, 
+			pointer_col, 
+			instructions_pad_start_row, 
+			instructions_pad_start_col, 
+			instructions_pad_end_row, 
+			instructions_pad_end_col
+		);
+
+		// React on user's input
+		key = getch();
+		switch (key) {
+			case TUI_KEY_DOWN:
+				pointer_row += INSTRUCTIONS_PAD_OFFSET;
+				if (pointer_row > instructions_count - INSTRUCTIONS_PAD_HEIGTH) {
+					pointer_row = instructions_count - INSTRUCTIONS_PAD_HEIGTH;
+				}
+				break;
+			case TUI_KEY_UP:
+				pointer_row -= INSTRUCTIONS_PAD_OFFSET;
+				if (pointer_row < 0) {
+					pointer_row = 0;
+				}
+				break;
+		}
+		if (key == ESC) break;
 	}
 
-	attroff(A_BOLD);
+	// Reset and refresh
+	keypad(stdscr, FALSE);
+	delwin(instructions_pad);
+	clear();
 	refresh();
 }
 
@@ -251,7 +337,7 @@ void game(char *file_name) {
 	init_pair(4, COLOR_WHITE, COLOR_MAGENTA);
 
 	if (file == NULL) {
-		add_logo();
+		add_logo(FALSE);
 
 		getyx(stdscr, y, x);
 		while ((key != '\n') && (key != ESC)) {
@@ -316,7 +402,7 @@ void game(char *file_name) {
 			level = rand() % 4 + 21;
 
 			clear();
-			add_logo();
+			add_logo(FALSE);
 			mvaddstr(0.2*LINES + 20, (COLS - 1 - strlen("!!! CAUTION !!!")) / 2, "!!! CAUTION !!!");
 			mvaddstr(0.2*LINES + 21, (COLS - 1 - strlen("THIS MIGHT TAKE LONG")) / 2, "THIS MIGHT TAKE LONG");
 			refresh();
@@ -343,7 +429,7 @@ void game(char *file_name) {
 					input = -1;
 				}
 
-				add_logo();
+				add_logo(FALSE);
 				// Options line
 				mvprintw(58, (COLS - 1 - strlen(".: CUSTOM LEVEL GENERATOR :.")) / 2, ".: CUSTOM LEVEL GENERATOR :.");
 				mvprintw(60, (COLS - 1 - strlen(custom)) / 2, custom);
@@ -559,7 +645,7 @@ void game(char *file_name) {
 			input = -1;
 		}
 
-		add_logo();
+		add_logo(FALSE);
 
 		// Current time
 		game_end = time + clock();
@@ -703,7 +789,7 @@ void game(char *file_name) {
 
 				//------------------- Save confirmation--------------------
 
-				add_logo();
+				add_logo(FALSE);
 
 				// Current time
 				pause_time = 0;
@@ -892,7 +978,7 @@ void game(char *file_name) {
 				clear();
 				nodelay(stdscr, TRUE);
 
-				add_logo();
+				add_logo(FALSE);
 
 				y = getcury(stdscr) + 20;
 				while (getch() == ERR) {
@@ -994,7 +1080,7 @@ int exit_menu() {
 
 	clear();
 
-	add_logo();
+	add_logo(FALSE);
 
 	// Creating window
 	wexit = newwin(25, SUDO_WIDTH -10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -1049,65 +1135,7 @@ int exit_menu() {
 	return pointer;
 }
 
-void instructions() {
-#define height (30) 
-#define width (50)
-	char red[50], key = ' ';
-	int i = 0, br, pointer = 0;
-	FILE *instr;
-	WINDOW *pad;
 
-	if ((instr = fopen("instructions.txt", "r")) == NULL)
-		return;
-
-	for (i = 0; fgets(red, 50, instr) != NULL; i++);
-	br = i;
-	rewind(instr);
-
-	// + bcspc
-	pad = newpad(2 * br, 50);
-	br *= 2;
-
-	i = 0;
-	while (!feof(instr)) {
-		fgets(red, 50, instr);
-		mvwaddstr(pad, i++, 0, red);
-		mvwaddstr(pad, i++, 0, "\n");
-	}
-	fclose(instr);
-
-	keypad(stdscr, TRUE);
-	while (key != ESC) {
-		clear();
-		add_logo();
-
-		mvprintw(0.1*LINES + 15, (COLS - 1 - strlen("INSTRUCTIONS")) / 2, "INSTRUCTIONS");
-		mvprintw(0.1*LINES + 55, (COLS - 1 - strlen("(press ESC to return)")) / 2, "(press ESC to return)");
-		refresh();
-
-		prefresh(pad, pointer, 0, 0.1*LINES + 20, (COLS - 1 - width) / 2, 0.1*LINES + 20 + height, (COLS - 1 + width) / 2);
-
-		key = getch();
-
-		switch (key) {
-
-		case TUI_KEY_DOWN:
-			pointer += 5;
-			if (pointer > br - height)
-				pointer = br - height;
-			break;
-
-		case TUI_KEY_UP:
-			pointer -= 5;
-			if (pointer < 0)
-				pointer = 0;
-			break;
-		}
-		if (key == ESC)
-			break;
-	}
-	delwin(pad);
-}
 //-----------------------------------------------------------
 
 void finish_scr(float time) {
@@ -1116,7 +1144,7 @@ void finish_scr(float time) {
 
 	clear();
 
-	add_logo();
+	add_logo(FALSE);
 
 	// Creating window
 	wfinish = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);

@@ -9,6 +9,11 @@
 #include "save-load.h"
 
 /**
+ * Displayed content width (in columns)
+ */
+#define SUDO_WIDTH (84)
+
+/**
  * Main menu options
  */
 #define MENU_BACK_TO_MAIN 0
@@ -18,10 +23,10 @@
 #define MENU_EXIT 4
 
 /**
- * Exit menu options
+ * Logo parameters
  */
-#define EXIT_NO 1
-#define EXIT_YES 2
+#define LOGO_WIDTH 84
+#define LOGO_HEIGHT 8
 
 /**
  * Keyboard key values
@@ -34,14 +39,29 @@
 #define BSPC ('\b')
 
 /**
- * Displayed content width (in columns)
+ * Instructions parameters
  */
-#define SUDO_WIDTH (84)
+#define INSTRUCTIONS_FILE "instructions.txt"
+#define INSTRUCTIONS_PAD_WIDTH 50
+#define INSTRUCTIONS_PAD_HEIGTH 30
+#define INSTRUCTIONS_PAD_OFFSET 5
+
+/**
+ * Exit menu options
+ */
+#define EXIT_NO 1
+#define EXIT_YES 2
 
 /**
  * Initialaizes program (curses + engine).
  */
 void initialize();
+
+/**
+ * Adds Sudoku logo to the screen.
+ * (renders logo slightly different on start screen)
+ */
+void add_logo(int on_start_screen);
 
 /**
  * Displays initial screen with logo.
@@ -55,9 +75,10 @@ void start_screen();
 int main_menu_screen();
 
 /**
- * Adds Sudoku logo to the screen.
+ * Displays instructions screen with all game details
+ * and help for new users.
  */
-void add_logo();
+void instructions_screen();
 
 /**
  * Finishes program (curses + engine).
@@ -65,9 +86,8 @@ void add_logo();
 void finish();
 
 // TO-DO
-void game(char *file);
 int exit_menu();
-void instructions();
+void game(char *file);
 void finish_scr(float time);
 void loading();
 void init_load();

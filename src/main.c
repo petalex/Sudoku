@@ -27,7 +27,7 @@ void main() {
 				break;
 			}
 			case MENU_INSTRUCTIONS: {
-				instructions();
+				instructions_screen();
 				menu_choice = MENU_BACK_TO_MAIN;
 				break;
 			}
@@ -37,9 +37,7 @@ void main() {
 				break;
 			}
 		}
-		if (exit_choice == EXIT_YES) {
-			break;
-		}
+		if (exit_choice == EXIT_YES) break;
 	}
 	finish();
 }

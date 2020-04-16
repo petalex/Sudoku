@@ -10,7 +10,7 @@ char *load_game() {
 
 		clear();
 
-		add_logo();
+		add_logo(FALSE);
 
 		keypad(stdscr, TRUE);
 		getyx(stdscr, y, x);
@@ -43,7 +43,7 @@ char *load_game() {
 
 		clear();
 
-		add_logo();
+		add_logo(FALSE);
 
 		// Menu
 		keypad(stdscr, TRUE);
@@ -117,7 +117,7 @@ char *load_game() {
 
 			clear();
 
-			add_logo();
+			add_logo(FALSE);
 
 			// Creating window
 			wcheck = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -272,7 +272,7 @@ char *enter_name() {
 
 	clear();
 
-	add_logo();
+	add_logo(FALSE);
 
 	// Creating window
 	win = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
@@ -378,7 +378,7 @@ int save_scr() {
 
 	clear();
 
-	add_logo();
+	add_logo(FALSE);
 
 	// Creating window
 	wsave = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
