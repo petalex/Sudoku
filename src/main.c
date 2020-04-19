@@ -32,7 +32,7 @@ void main() {
 				break;
 			}
 			case MENU_EXIT: {
-				exit_choice = exit_menu();
+				exit_choice = exit_menu_screen();
 				menu_choice = MENU_BACK_TO_MAIN;
 				break;
 			}

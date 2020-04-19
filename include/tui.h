@@ -29,14 +29,15 @@
 #define LOGO_HEIGHT 8
 
 /**
- * Keyboard key values
+ * Keyboard special key values 
+ * (char values of Curses integer constants)
  */
 #define TUI_KEY_DOWN ('\x2')
 #define TUI_KEY_UP ('\x3')
-#define LEFT ('\x4')
-#define RIGHT ('\x5')
-#define ESC ('\x1b')
-#define BSPC ('\b')
+#define TUI_KEY_LEFT ('\x4')
+#define TUI_KEY_RIGHT ('\x5')
+#define TUI_KEY_ESC ('\x1b')
+#define TUI_KEY_BSPC ('\b')
 
 /**
  * Instructions parameters
@@ -47,8 +48,10 @@
 #define INSTRUCTIONS_PAD_OFFSET 5
 
 /**
- * Exit menu options
+ * Exit menu parameters
  */
+#define EXIT_WINDOW_WIDTH (SUDO_WIDTH - 10)
+#define EXIT_WINDOW_HEIGHT 25
 #define EXIT_NO 1
 #define EXIT_YES 2
 
@@ -81,13 +84,19 @@ int main_menu_screen();
 void instructions_screen();
 
 /**
+ * Displays exit menu screen with yes/no options.
+ * Returns user's choice as a Exit Menu option.
+ */
+int exit_menu_screen();
+
+/**
  * Finishes program (curses + engine).
  */
 void finish();
 
 // TO-DO
-int exit_menu();
 void game(char *file);
+
 void finish_scr(float time);
 void loading();
 void init_load();

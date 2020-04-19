@@ -28,13 +28,7 @@ void add_logo(int on_start_screen) {
 	attrset(A_BOLD);
 
 	// Add Sudoku logo (starting 20/10% from top and horizontally centered)
-	if (on_start_screen) {
-		// Starting 20% from top on start screen
-		logo_start_row = 0.2 * LINES;
-	} else {
-		// Starting 10% from top on other screens
-		logo_start_row = 0.1 * LINES;
-	}
+	logo_start_row = on_start_screen ? 0.2 * LINES : 0.1 * LINES;
 	logo_start_col = (COLS - 1 - LOGO_WIDTH) / 2;
 	for (row = 0; row < LOGO_HEIGHT; row++) {
 		if (on_start_screen) {
@@ -86,17 +80,14 @@ void start_screen() {
 	// "Blink" tap message while waiting for user's input
 	is_tap_shown = TRUE;
 	while (getch() == ERR) {
-		switch (is_tap_shown) {
-			case TRUE:
-				// Add tap message
-				mvaddstr(tap_start_row, tap_start_col, tap); 
-				break;
-			case FALSE:
-				// Remove tap message
-				move(tap_start_row, tap_start_col);
-				deleteln();
-				insertln();
-				break;
+		if (is_tap_shown) {
+			// Add tap message
+			mvaddstr(tap_start_row, tap_start_col, tap);
+		} else {
+			// Remove tap message
+			move(tap_start_row, tap_start_col);
+			deleteln();
+			insertln();
 		}
 		is_tap_shown = 1 - is_tap_shown;
 		refresh();
@@ -135,8 +126,8 @@ int main_menu_screen() {
 	menu_options_start_row = getcury(stdscr) + 15;
 
 	// Add menu options and react on user's input
-	while ((key != '\n') && (key != ESC)) {
-		int is_option_shown = TRUE;
+	while ((key != '\n') && (key != TUI_KEY_ESC)) {
+		is_option_shown = TRUE;
 
 		// Make getch non-blocking
 		nodelay(stdscr, TRUE);
@@ -180,9 +171,6 @@ int main_menu_screen() {
 					current_option = menu_options_count - 1; // Back to last option
 				}
 				break;
-			default:
-				// Do nothing
-				break;
 		}
 	}
 
@@ -192,11 +180,7 @@ int main_menu_screen() {
 	refresh();
 
 	// Return chosen menu option
-	if (key == ESC) {
-		return MENU_EXIT;
-	} else {
-		return current_option + 1;
-	}
+	return key == TUI_KEY_ESC ? MENU_EXIT : current_option + 1;
 }
 
 void instructions_screen() {
@@ -245,7 +229,7 @@ void instructions_screen() {
 	keypad(stdscr, TRUE);
 
 	// Add instructions pad and react on user's input
-	while (key != ESC) {
+	while (key != TUI_KEY_ESC) {
 		// Clear and re-add all components on instructions screen
 		clear();
 		add_logo(FALSE);
@@ -278,7 +262,7 @@ void instructions_screen() {
 				}
 				break;
 		}
-		if (key == ESC) break;
+		if (key == TUI_KEY_ESC) break;
 	}
 
 	// Reset and refresh
@@ -286,6 +270,86 @@ void instructions_screen() {
 	delwin(instructions_pad);
 	clear();
 	refresh();
+}
+
+int exit_menu_screen() {
+	char confirmation[] = "DO YOU REALLY WANT TO QUIT?";
+	int confirmation_start_row, confirmation_start_col;
+	char *exit_options[] = {
+		"NO",
+		"YES"
+	};
+	int exit_options_start_col;
+	WINDOW *exit_window;
+	int exit_window_start_row, exit_window_start_col;
+	int current_option = 0, is_option_shown;
+	char key = ' ';
+	
+	clear();//<-------------------------------------- TO-DO: Needs to be removed after adjusting all function call's
+
+	// Add Sudoko logo at the top
+	add_logo(FALSE);
+
+	// Create bordered exit menu sub-window (7 columns under the logo and horizontally centered)
+	exit_window_start_row = (0.1 * LINES + LOGO_HEIGHT) + 7;
+	exit_window_start_col = (COLS - 1 - EXIT_WINDOW_WIDTH) / 2;
+	exit_window = newwin(EXIT_WINDOW_HEIGHT, EXIT_WINDOW_WIDTH, exit_window_start_row, exit_window_start_col);
+	box(exit_window, '|', '-');
+
+	// Add exit confirmation text (10 columns from top and horizontally centered)
+	confirmation_start_row = 10;
+	confirmation_start_col = (COLS - 1 - strlen(confirmation)) / 2 - exit_window_start_col;
+	mvwaddstr(exit_window, confirmation_start_row, confirmation_start_col, confirmation);
+
+	// Enable arrow keys input
+	keypad(exit_window, TRUE);
+
+	// Add exit menu sub-window and react on user's input
+	while ((key != '\n') && (key != TUI_KEY_ESC)) {
+		is_option_shown = TRUE;
+
+		// Make getch non-blocking
+		nodelay(exit_window, TRUE);
+		// Add menu options where current option is "blinking"
+		while ((key = wgetch(exit_window)) == ERR) {
+			if (current_option == 0 && is_option_shown) {
+				wattron(exit_window, A_REVERSE);
+				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, 5, exit_options[0]);
+				wattroff(exit_window, A_REVERSE);
+			} else {
+				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, 5, exit_options[0]);
+			}
+			if (current_option == 1 && is_option_shown) {
+				wattron(exit_window, A_REVERSE);
+				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, EXIT_WINDOW_WIDTH - (strlen(exit_options[1]) + 5), exit_options[1]);
+				wattroff(exit_window, A_REVERSE);
+			} else {
+				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, EXIT_WINDOW_WIDTH - (strlen(exit_options[1]) + 5), exit_options[1]);
+			}
+			
+			is_option_shown = 1 - is_option_shown;
+			wrefresh(exit_window);
+			napms(300);
+		}
+		// Reset getch to blocking
+		nodelay(exit_window, FALSE);
+
+		// React on user's input
+		switch (key) {
+			case TUI_KEY_RIGHT:
+			case TUI_KEY_LEFT:
+				current_option = 1 - current_option;
+				break;
+		}
+	}
+
+	// Reset and refresh
+	delwin(exit_window);
+	clear();
+	refresh();
+
+	// Return chosen menu option
+	return key == TUI_KEY_ESC ? EXIT_NO : current_option + 1;
 }
 
 void finish() {
@@ -340,7 +404,7 @@ void game(char *file_name) {
 		add_logo(FALSE);
 
 		getyx(stdscr, y, x);
-		while ((key != '\n') && (key != ESC)) {
+		while ((key != '\n') && (key != TUI_KEY_ESC)) {
 			mvaddstr(y + 15, (COLS - 1 - strlen(menu[0])) / 2, menu[0]);
 
 			for (i = 1; i < maxmenu; i++) {
@@ -376,7 +440,7 @@ void game(char *file_name) {
 		}
 
 		// Returning to start_menu
-		if (key == ESC)
+		if (key == TUI_KEY_ESC)
 			return;
 		//
 
@@ -485,7 +549,7 @@ void game(char *file_name) {
 
 					switch (key) {
 
-					case BSPC:
+					case TUI_KEY_BSPC:
 						input = 0;
 						break;
 
@@ -501,13 +565,13 @@ void game(char *file_name) {
 							pointerx = 8;
 						break;
 
-					case LEFT:
+					case TUI_KEY_LEFT:
 						pointery--;
 						if (pointery < 0)
 							pointery = 8;
 						break;
 
-					case RIGHT:
+					case TUI_KEY_RIGHT:
 						pointery++;
 						if (pointery == 9)
 							pointery = 0;
@@ -583,23 +647,23 @@ void game(char *file_name) {
 										bool_sudoku[i][j] = T;
 									}
 
-							exit = 2;
+							exit = EXIT_YES;
 						}
 					}
 							  break;
 
 							  // Quit
-					case ESC:
+					case TUI_KEY_ESC:
 					case 'Q':
 					case 'q': {
-						exit = exit_menu();
+						exit = exit_menu_screen();
 					}
 							  break;
 
 					default:
 						break;
 					}
-				if (exit == 2) break;
+				if (exit == EXIT_YES) break;
 			}
 			if ((key == 'f') || (key == 'F')) {
 				exit = 0;
@@ -633,7 +697,7 @@ void game(char *file_name) {
 	pause_time = 0;
 
 	key = ' ';
-	if (exit == 2)
+	if (exit == EXIT_YES)
 		return;
 	while (1) {
 		// Possible input
@@ -710,7 +774,7 @@ void game(char *file_name) {
 
 			switch (key) {
 
-			case BSPC:
+			case TUI_KEY_BSPC:
 				input = 0;
 				break;
 
@@ -726,13 +790,13 @@ void game(char *file_name) {
 					pointerx = 8;
 				break;
 
-			case LEFT:
+			case TUI_KEY_LEFT:
 				pointery--;
 				if (pointery < 0)
 					pointery = 8;
 				break;
 
-			case RIGHT:
+			case TUI_KEY_RIGHT:
 				pointery++;
 				if (pointery == 9)
 					pointery = 0;
@@ -895,7 +959,7 @@ void game(char *file_name) {
 				// If it is correct, exit.
 				if (cor == T) {
 					finish_scr((float)(game_end - game_start - pause_time) / (float)CLOCKS_PER_SEC);
-					exit = exit_menu();
+					exit = exit_menu_screen();
 				}
 				pause_time += clock() - pause_start;
 			}
@@ -1006,12 +1070,12 @@ void game(char *file_name) {
 					  break;
 
 					  // Quit
-			case ESC:
+			case TUI_KEY_ESC:
 			case 'Q':
 			case 'q': {
 				pause_start = clock();
 
-				exit = exit_menu();
+				exit = exit_menu_screen();
 
 				pause_time += clock() - pause_start;
 			}
@@ -1051,7 +1115,7 @@ void game(char *file_name) {
 			default:
 				break;
 			}
-			if (exit == 2)
+			if (exit == EXIT_YES)
 				break;
 	}
 
@@ -1068,72 +1132,6 @@ void game(char *file_name) {
 }
 
 //-----------------------------------------------------------
-
-int exit_menu() {
-	char *exit[] = {
-		"DO YOU REALLY WANT TO QUIT?", 
-		"NO",
-		"YES"};
-	char key = ' ';
-	int pointer = 1;
-	WINDOW *wexit;
-
-	clear();
-
-	add_logo(FALSE);
-
-	// Creating window
-	wexit = newwin(25, SUDO_WIDTH -10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
-	box(wexit, '|', '-');
-
-	mvwaddstr(wexit, 10, (COLS - 1 - strlen(exit[0])) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, exit[0]);
-
-	// Window output
-	keypad(wexit, TRUE);
-	while ((key != '\n') && (key != ESC)) {
-
-		if (pointer == 1) {
-			wattron(wexit, A_REVERSE);
-			mvwaddstr(wexit, 22, 5, exit[1]);
-			wattroff(wexit, A_REVERSE);
-			mvwaddstr(wexit, 22, SUDO_WIDTH - 17, exit[2]);
-		}
-		else {
-			mvwaddstr(wexit, 22, 5, exit[1]);
-			wattron(wexit, A_REVERSE);
-			mvwaddstr(wexit, 22, SUDO_WIDTH - 17, exit[2]);
-			wattroff(wexit, A_REVERSE);
-		}
-		wrefresh(wexit);
-
-		key = wgetch(wexit);
-		switch (key) {
-
-		case RIGHT:
-			pointer++;
-			if (pointer == 3)
-				pointer = 1;
-			break;
-
-		case LEFT:
-			pointer--;
-			if (pointer < 1)
-				pointer = 2;
-			break;
-
-		default:
-			break;
-		}
-	}
-
-	delwin(wexit);
-	clear();
-	refresh();
-
-	if (key == ESC)
-		return 1;
-	return pointer;
-}
 
 
 //-----------------------------------------------------------

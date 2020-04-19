@@ -48,7 +48,7 @@ char *load_game() {
 		// Menu
 		keypad(stdscr, TRUE);
 		getyx(stdscr, y, x);
-		while ((key != '\n') && (key != ESC)) {
+		while ((key != '\n') && (key != TUI_KEY_ESC)) {
 			mvaddstr(y + 12, (COLS - 1 - strlen("CHOOSE A GAME:")) / 2, "CHOOSE A GAME:");
 			for (i = 0; i < maxmenu; i++) {
 				// Conversion to readable name
@@ -92,7 +92,7 @@ char *load_game() {
 			}
 		}
 
-		if (key == ESC)
+		if (key == TUI_KEY_ESC)
 			break;
 
 		// Conversion to svg file name
@@ -127,7 +127,7 @@ char *load_game() {
 
 			// Window output
 			keypad(wcheck, TRUE);
-			while ((key != '\n') && (key != ESC)) {
+			while ((key != '\n') && (key != TUI_KEY_ESC)) {
 
 				if (pointer == 1) {
 					wattron(wcheck, A_REVERSE);
@@ -146,13 +146,13 @@ char *load_game() {
 				key = wgetch(wcheck);
 				switch (key) {
 
-				case RIGHT:
+				case TUI_KEY_RIGHT:
 					pointer++;
 					if (pointer == 3)
 						pointer = 1;
 					break;
 
-				case LEFT:
+				case TUI_KEY_LEFT:
 					pointer--;
 					if (pointer < 1)
 						pointer = 2;
@@ -180,7 +180,7 @@ char *load_game() {
 		free(menu[i]);
 	}
 	free(menu);
-	if (key == ESC) {
+	if (key == TUI_KEY_ESC) {
 		free(game);
 		return NULL;
 	}
@@ -291,7 +291,7 @@ char *enter_name() {
 
 	// Window output
 	keypad(stdscr, TRUE);
-	while ((key != '\n') && (key != ESC)) {
+	while ((key != '\n') && (key != TUI_KEY_ESC)) {
 		for (i = 0; i < maxsize; i++) {
 			if (i == pointer) {
 				if (name[pointer] == 0) {
@@ -326,18 +326,18 @@ char *enter_name() {
 		}
 		else {
 			switch (key) {
-			case BSPC:
+			case TUI_KEY_BSPC:
 				name[pointer] = 0;
 				if (pointer > 0)
 					pointer--;
 				break;
-			case RIGHT:
+			case TUI_KEY_RIGHT:
 				pointer++;
 				if (pointer == maxsize)
 					pointer = 0;
 				break;
 
-			case LEFT:
+			case TUI_KEY_LEFT:
 				pointer--;
 				if (pointer < 0)
 					pointer = maxsize - 1;
@@ -355,7 +355,7 @@ char *enter_name() {
 		delwin(wname[i]);
 	clear();
 
-	if (key == ESC) {
+	if (key == TUI_KEY_ESC) {
 		name = "//Back";
 		return name;
 	}
@@ -388,7 +388,7 @@ int save_scr() {
 
 	// Window output
 	keypad(wsave, TRUE);
-	while ((key != '\n') && (key != ESC)) {
+	while ((key != '\n') && (key != TUI_KEY_ESC)) {
 
 		if (pointer == 1) {
 			wattron(wsave, A_REVERSE);
@@ -407,13 +407,13 @@ int save_scr() {
 		key = wgetch(wsave);
 		switch (key) {
 
-		case RIGHT:
+		case TUI_KEY_RIGHT:
 			pointer++;
 			if (pointer == 3)
 				pointer = 1;
 			break;
 
-		case LEFT:
+		case TUI_KEY_LEFT:
 			pointer--;
 			if (pointer < 1)
 				pointer = 2;
@@ -426,7 +426,7 @@ int save_scr() {
 
 	delwin(wsave);
 	clear();
-	if (key == ESC)
+	if (key == TUI_KEY_ESC)
 		return 1;
 	return pointer;
 }
