@@ -40,11 +40,11 @@ int generateSudoku(int sud[][9]) {
 	
 	for (i = 0; i < 9; i++) {
 		for (j = 0; j < 9; j++) {
-			loading();
+			continue_loading();
 			if (sud[i][j] == 0) {
 				for (number = 0; number < 9; number++) pos[number] = 0;
 				while (fullPos(pos) == F) {
-					loading();
+					continue_loading();
 					number = (rand() % 9) + 1;
 					if (pos[number - 1] == 0) {
 						pos[number - 1] = 1;
@@ -80,13 +80,13 @@ int generateSudokuLevel(int sud[][9], int level) {
 	level = 81 - level;
 
 	while (level) {
-		loading();
+		continue_loading();
 		if (checked > CRITICAL_CHECKED) {
 			flag = F;
 			ra = rand() % (81 - checked) + 1;
 			for (i = 0; i < 9; i++) {
 				for (j = 0; j < 9; j++) {
-					loading();
+					continue_loading();
 					if ((sud[i][j] != 0) && (temp[i][j] == F)) {
 						if (ra == 1) {
 							flag = T;

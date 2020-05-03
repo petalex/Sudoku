@@ -1,8 +1,5 @@
 #include "../include/tui.h"
 
-clock_t last_time, first_time;
-char loading1[] = "LOADING .....";
-
 void initialize() {
 	initscr();
 	resize_term(75, 100);
@@ -183,6 +180,87 @@ int main_menu_screen() {
 	return key == TUI_KEY_ESC ? MENU_EXIT : current_option + 1;
 }
 
+clock_t loading_initialization_time, loading_update_interval;
+int loading_dot_counter;
+
+void initialize_loading() {
+	char loading[] = "LOADING";
+	int loading_start_row, loading_start_col;
+
+	loading_initialization_time = clock() / (double)CLOCKS_PER_SEC;
+	loading_update_interval = 0;
+	loading_dot_counter = 0;
+	
+	// Add initial loading message (52 rows from top and horizontally centered)
+	loading_start_row = 52;
+	loading_start_col = (COLS - 1 - strlen(loading)) / 2;
+	mvaddstr(loading_start_row, loading_start_col, loading);
+
+	refresh();
+}
+
+void continue_loading() {
+	char loading[] = "LOADING     ";
+	int loading_start_row, loading_start_col;
+	clock_t current_update_interval;
+	int index;
+
+	current_update_interval = clock() / (double)CLOCKS_PER_SEC - loading_initialization_time;
+	if (current_update_interval > loading_update_interval) {
+		// Update loading interval
+		loading_update_interval = current_update_interval;
+
+		// Update loading message with new dot
+		loading_dot_counter++;
+		loading_dot_counter = loading_dot_counter > LOADING_DOT_COUNT ? 0 : loading_dot_counter;
+		for (index = 0; index < loading_dot_counter; index++) loading[strlen("LOADING") + index] = '.';
+
+		// Add updated loading message (52 rows from top and horizontally centered)
+		loading_start_row = 52;
+		loading_start_col = (COLS - 1 - strlen("LOADING")) / 2;
+		mvaddstr(loading_start_row, loading_start_col, loading);
+
+		refresh();
+	}
+}
+
+void game_finish_screen(float time) {
+	char congratulation[] = "CONGRATULATION! YOU SOLVE IT!";
+	int congratulation_start_row, congratulation_start_col;
+	char finish_time[] = "YOUR FINISH TIME IS : %.2f sec";
+	int finish_time_start_row, finish_time_start_col;
+	WINDOW *finish_window;
+	int finish_window_start_row, finish_window_start_col;
+
+	// Add Sudoko logo at the top
+	add_logo(FALSE);
+
+	// Create bordered finish sub-window (7 rows under the logo and horizontally centered)
+	finish_window_start_row = (0.1 * LINES + LOGO_HEIGHT) + 7;
+	finish_window_start_col = (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2;
+	finish_window = newwin(DIALOG_WINDOW_HEIGTH, DIALOG_WINDOW_WIDTH, finish_window_start_row, finish_window_start_col);
+	box(finish_window, '|', '-');
+
+	// Add congratulation text (10 rows from top and horizontally centered)
+	congratulation_start_row = 10;
+	congratulation_start_col = (COLS - 1 - strlen(congratulation)) / 2 - finish_window_start_col;
+	mvwaddstr(finish_window, congratulation_start_row, congratulation_start_col, congratulation);
+
+	// Add congratulation text (10 rows from top and horizontally centered)
+	sprintf(finish_time, finish_time, time);
+	finish_time_start_row = 15;
+	finish_time_start_col = (COLS - 1 - strlen(finish_time)) / 2 - finish_window_start_col;
+	mvwaddstr(finish_window, finish_time_start_row, finish_time_start_col, finish_time);
+	
+	wrefresh(finish_window);
+
+	// Reset and refresh (after 3s)
+	napms(3000);
+	delwin(finish_window);
+	clear();
+	refresh();
+}
+
 void instructions_screen() {
 	char title[] = "INSTRUCTIONS";
 	int title_start_row, title_start_col;
@@ -211,17 +289,17 @@ void instructions_screen() {
 	}
 	fclose(instructions_file);
 
-	// Title's position (7 columns under the logo and horizontally centered)
+	// Title's position (7 rows under the logo and horizontally centered)
 	title_start_row = (0.1 * LINES + LOGO_HEIGHT) + 7;
 	title_start_col = (COLS - 1 - strlen(title)) / 2;
 
-	// Pad's start(top-left) and end(bottom-right) positions
+	// Pad's start (top-left) and end (bottom-right) positions
 	instructions_pad_start_row = (0.1 * LINES + LOGO_HEIGHT) + 12;
 	instructions_pad_start_col = (COLS - 1 - INSTRUCTIONS_PAD_WIDTH) / 2;
 	instructions_pad_end_row = instructions_pad_start_row + INSTRUCTIONS_PAD_HEIGTH;
 	instructions_pad_end_col = (COLS - 1 - INSTRUCTIONS_PAD_WIDTH) / 2 + INSTRUCTIONS_PAD_WIDTH;
 
-	// Hint's position (5 columns under the pad and horizontally centered)
+	// Hint's position (5 rows under the pad and horizontally centered)
 	hint_start_row = instructions_pad_end_row + 5;
 	hint_start_col = (COLS - 1 - strlen(hint)) / 2;
 
@@ -290,13 +368,13 @@ int exit_menu_screen() {
 	// Add Sudoko logo at the top
 	add_logo(FALSE);
 
-	// Create bordered exit menu sub-window (7 columns under the logo and horizontally centered)
+	// Create bordered exit menu sub-window (7 rows under the logo and horizontally centered)
 	exit_window_start_row = (0.1 * LINES + LOGO_HEIGHT) + 7;
-	exit_window_start_col = (COLS - 1 - EXIT_WINDOW_WIDTH) / 2;
-	exit_window = newwin(EXIT_WINDOW_HEIGHT, EXIT_WINDOW_WIDTH, exit_window_start_row, exit_window_start_col);
+	exit_window_start_col = (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2;
+	exit_window = newwin(DIALOG_WINDOW_HEIGTH, DIALOG_WINDOW_WIDTH, exit_window_start_row, exit_window_start_col);
 	box(exit_window, '|', '-');
 
-	// Add exit confirmation text (10 columns from top and horizontally centered)
+	// Add exit confirmation text (10 rows from top and horizontally centered)
 	confirmation_start_row = 10;
 	confirmation_start_col = (COLS - 1 - strlen(confirmation)) / 2 - exit_window_start_col;
 	mvwaddstr(exit_window, confirmation_start_row, confirmation_start_col, confirmation);
@@ -314,17 +392,17 @@ int exit_menu_screen() {
 		while ((key = wgetch(exit_window)) == ERR) {
 			if (current_option == 0 && is_option_shown) {
 				wattron(exit_window, A_REVERSE);
-				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, 5, exit_options[0]);
+				mvwaddstr(exit_window, DIALOG_WINDOW_HEIGTH - 3, DIALOG_WIDOW_HORIZONTAL_PADDING, exit_options[0]);
 				wattroff(exit_window, A_REVERSE);
 			} else {
-				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, 5, exit_options[0]);
+				mvwaddstr(exit_window, DIALOG_WINDOW_HEIGTH - 3, DIALOG_WIDOW_HORIZONTAL_PADDING, exit_options[0]);
 			}
 			if (current_option == 1 && is_option_shown) {
 				wattron(exit_window, A_REVERSE);
-				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, EXIT_WINDOW_WIDTH - (strlen(exit_options[1]) + 5), exit_options[1]);
+				mvwaddstr(exit_window, DIALOG_WINDOW_HEIGTH - 3, DIALOG_WINDOW_WIDTH - (strlen(exit_options[1]) + DIALOG_WIDOW_HORIZONTAL_PADDING), exit_options[1]);
 				wattroff(exit_window, A_REVERSE);
 			} else {
-				mvwaddstr(exit_window, EXIT_WINDOW_HEIGHT - 3, EXIT_WINDOW_WIDTH - (strlen(exit_options[1]) + 5), exit_options[1]);
+				mvwaddstr(exit_window, DIALOG_WINDOW_HEIGTH - 3, DIALOG_WINDOW_WIDTH - (strlen(exit_options[1]) + DIALOG_WIDOW_HORIZONTAL_PADDING), exit_options[1]);
 			}
 			
 			is_option_shown = 1 - is_option_shown;
@@ -673,7 +751,7 @@ void game(char *file_name) {
 		// Sudoku generating
 		if (nivo != 5) {
 			buildSudoku(sudoku);
-			init_load();
+			initialize_loading();
 			while (generateSudokuLevel(sudoku, level) == F);
 
 			for (i = 0; i < 9; i++) {
@@ -958,7 +1036,10 @@ void game(char *file_name) {
 				napms(700);
 				// If it is correct, exit.
 				if (cor == T) {
-					finish_scr((float)(game_end - game_start - pause_time) / (float)CLOCKS_PER_SEC);
+					clear();
+					refresh();
+
+					game_finish_screen((float)(game_end - game_start - pause_time) / (float)CLOCKS_PER_SEC);
 					exit = exit_menu_screen();
 				}
 				pause_time += clock() - pause_start;
@@ -1129,72 +1210,4 @@ void game(char *file_name) {
 			delwin(matrix[i][j]);
 
 	keypad(stdscr, FALSE);
-}
-
-//-----------------------------------------------------------
-
-
-//-----------------------------------------------------------
-
-void finish_scr(float time) {
-	WINDOW *wfinish;
-
-
-	clear();
-
-	add_logo(FALSE);
-
-	// Creating window
-	wfinish = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
-	box(wfinish, '|', '-');
-
-	// Window output
-	mvwprintw(wfinish, 10, (COLS - 1 - strlen("CONGRATUATION! YOU SOLVE IT!")) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, "CONGRATUATION! YOU SOLVE IT!");
-	mvwprintw(wfinish, 15, (COLS - 1 - strlen("YOUR FINIDH TIME IS : 0000.00")) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, "YOUR FINISH TIME IS : %.2f sec", time);
-
-	wrefresh(wfinish);
-	napms(3000);
-
-	delwin(wfinish);
-	clear();
-}
-
-// Loading screen
-void loading() {
-	clock_t time = 2 * clock() / (double)CLOCKS_PER_SEC - first_time;
-	int dot, i;
-
-	if (time > last_time) {
-
-		if (loading1[8] == '.') {
-			loading1[8] = ' ';
-			loading1[9] = '.';
-		}
-		else if (loading1[9] == '.') {
-			loading1[9] = ' ';
-			loading1[10] = '.';
-		}
-		else if (loading1[10] == '.') {
-			loading1[10] = ' ';
-			loading1[11] = '.';
-		}
-		else if (loading1[11] == '.') {
-			loading1[11] = ' ';
-			loading1[12] = '.';
-		}
-		else {
-			loading1[12] = ' ';
-			loading1[8] = '.';
-		}
-
-		mvprintw(52, (COLS - 1 - strlen("LOADING .....")) / 2, "%s", loading1);
-		refresh();
-		last_time = time;
-	}
-}
-
-void init_load() {
-	first_time = 2 * clock() / (double)CLOCKS_PER_SEC;
-	last_time = 0;
-	strcpy(loading1, "LOADING .    ");
 }

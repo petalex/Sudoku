@@ -120,10 +120,10 @@ char *load_game() {
 			add_logo(FALSE);
 
 			// Creating window
-			wcheck = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
+			wcheck = newwin(25, DIALOG_WINDOW_WIDTH, 0.1*LINES + 15, (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2);
 			box(wcheck, '|', '-');
 
-			mvwaddstr(wcheck, 10, (COLS - 1 - strlen(check[0])) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, check[0]);
+			mvwaddstr(wcheck, 10, (COLS - 1 - strlen(check[0])) / 2 - (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2, check[0]);
 
 			// Window output
 			keypad(wcheck, TRUE);
@@ -133,12 +133,12 @@ char *load_game() {
 					wattron(wcheck, A_REVERSE);
 					mvwaddstr(wcheck, 22, 5, check[1]);
 					wattroff(wcheck, A_REVERSE);
-					mvwaddstr(wcheck, 22, SUDO_WIDTH - 17, check[2]);
+					mvwaddstr(wcheck, 22, DIALOG_WINDOW_WIDTH - 7, check[2]);
 				}
 				else {
 					mvwaddstr(wcheck, 22, 5, check[1]);
 					wattron(wcheck, A_REVERSE);
-					mvwaddstr(wcheck, 22, SUDO_WIDTH - 17, check[2]);
+					mvwaddstr(wcheck, 22, DIALOG_WINDOW_WIDTH - 7, check[2]);
 					wattroff(wcheck, A_REVERSE);
 				}
 				wrefresh(wcheck);
@@ -275,11 +275,11 @@ char *enter_name() {
 	add_logo(FALSE);
 
 	// Creating window
-	win = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
+	win = newwin(25, DIALOG_WINDOW_WIDTH, 0.1*LINES + 15, (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2);
 	box(win, '|', '-');
 
-	mvwaddstr(win, 10, (COLS - 1 - strlen("WRITE YOUR NAME :")) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, "WRITE YOUR NAME :");
-	mvwaddstr(win, 23, (COLS - 1 - strlen("LEFT [ <- ]     RIGHT [ -> ]     CONFIRM [ENTER]     BACK[ESC]")) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, "LEFT [ <- ]     RIGHT [ -> ]     CONFIRM [ENTER]     BACK[ESC]");
+	mvwaddstr(win, 10, (COLS - 1 - strlen("WRITE YOUR NAME :")) / 2 - (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2, "WRITE YOUR NAME :");
+	mvwaddstr(win, 23, (COLS - 1 - strlen("LEFT [ <- ]     RIGHT [ -> ]     CONFIRM [ENTER]     BACK[ESC]")) / 2 - (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2, "LEFT [ <- ]     RIGHT [ -> ]     CONFIRM [ENTER]     BACK[ESC]");
 	wrefresh(win);
 
 	// Creating name array
@@ -381,10 +381,10 @@ int save_scr() {
 	add_logo(FALSE);
 
 	// Creating window
-	wsave = newwin(25, SUDO_WIDTH - 10, 0.1*LINES + 15, (COLS - 1 - SUDO_WIDTH + 10) / 2);
+	wsave = newwin(25, DIALOG_WINDOW_WIDTH, 0.1*LINES + 15, (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2);
 	box(wsave, '|', '-');
 
-	mvwaddstr(wsave, 10, (COLS - 1 - strlen(exit[0])) / 2 - (COLS - 1 - SUDO_WIDTH + 10) / 2, exit[0]);
+	mvwaddstr(wsave, 10, (COLS - 1 - strlen(exit[0])) / 2 - (COLS - 1 - DIALOG_WINDOW_WIDTH) / 2, exit[0]);
 
 	// Window output
 	keypad(wsave, TRUE);
@@ -394,12 +394,12 @@ int save_scr() {
 			wattron(wsave, A_REVERSE);
 			mvwaddstr(wsave, 22, 5, exit[1]);
 			wattroff(wsave, A_REVERSE);
-			mvwaddstr(wsave, 22, SUDO_WIDTH - 17, exit[2]);
+			mvwaddstr(wsave, 22, DIALOG_WINDOW_WIDTH - 7, exit[2]);
 		}
 		else {
 			mvwaddstr(wsave, 22, 5, exit[1]);
 			wattron(wsave, A_REVERSE);
-			mvwaddstr(wsave, 22, SUDO_WIDTH - 17, exit[2]);
+			mvwaddstr(wsave, 22, DIALOG_WINDOW_WIDTH - 7, exit[2]);
 			wattroff(wsave, A_REVERSE);
 		}
 		wrefresh(wsave);
